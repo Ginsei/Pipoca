@@ -2,12 +2,9 @@ package br.usjt.arqsw18.pipoca.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
-import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,72 +17,34 @@ import br.usjt.arqsw18.pipoca.model.service.GeneroService;
 
 @Controller
 public class ManterFilmesController {
-	@Autowired
-	private FilmeService fService;
-	@Autowired
-	private GeneroService gService;
+	private FilmeService filmeService;
+	private GeneroService generoService;
 
-	@RequestMapping("index")
-	public String iniciar() {
-		return "index";
+	public ManterFilmesController() {
+		filmeService = new FilmeService();
+		generoService = new GeneroService();
 	}
 
-	@RequestMapping("/novo_filme")
-	public String novo(Model model, HttpSession session) {
+	@RequestMapping("/novo")
+	public String novoFilme(Model model) {
 		try {
-			List<Genero> generos = gService.listarGeneros();
-			session.setAttribute("generos", generos);
-			return "CriarFilme";
+			ArrayList<Genero> generos = generoService.listarGeneros();
+			model.addAttribute("generos", generos);
+			return "NovoFilme";
 		} catch (IOException e) {
 			e.printStackTrace();
 			model.addAttribute("erro", e);
 			return "Erro";
 		}
+
 	}
 
-	@RequestMapping("/criar_filme")
-	public String criarFilme(@Valid Filme filme, BindingResult erros, Model model) {
+	@RequestMapping("/inserir")
+	public String inserirFilme(Filme filme, Model model) {
 		try {
-			if (!erros.hasErrors()) {
-				Genero genero = new Genero();
-				genero.setId(filme.getGenero().getId());
-				genero.setNome(gService.buscarGenero(genero.getId()).getNome());
-				filme.setGenero(genero);
-
-				filme = fService.inserirFilme(filme);
-
-				model.addAttribute("filme", filme);
-
-				return "VisualizarFilme";
-			} else {
-				return "CriarFilme";
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			model.addAttribute("erro", e);
-			return "Erro";
-		}
-	}
-
-	@RequestMapping("/reiniciar_lista")
-	public String reiniciarLista(HttpSession session) {
-		session.setAttribute("lista", null);
-		return "ListarFilmes";
-	}
-
-	@RequestMapping("/listar_filmes")
-	public String listarFilmes(HttpSession session, Model model, String chave) {
-		try {
-			// HttpSession session = ((HttpServletRequest) model).getSession();
-
-			ArrayList<Filme> lista;
-			if (chave != null && chave.length() > 0) {
-				lista = fService.listarFilmes(chave);
-			} else {
-				lista = fService.listarFilmes();
-			}
-			session.setAttribute("lista", lista);
-			return "ListarFilmes";
+			filme = filmeService.inserirFilme(filme);
+			model.addAttribute("filme", filme);
+			return "Resultado";
 		} catch (IOException e) {
 			e.printStackTrace();
 			model.addAttribute("erro", e);
